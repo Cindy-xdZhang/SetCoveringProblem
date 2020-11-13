@@ -101,7 +101,7 @@ def DpSolver( Subsets, TargetSet):
             SubsetsLeft[k]=v
     if len(SubsetsLeft.keys())>100:
         print("*** SubsetsLeft Too long :",len(SubsetsLeft.keys()),"! Dynamic programming fails for high complexity!")
-        return 999999999
+        return 999999999,999999999
     else:
         DV_RESTORE.clear()  
         RuningSelect.clear()
@@ -125,11 +125,11 @@ def DpSolver( Subsets, TargetSet):
         FinalCover=[itm for itm in TargetSet if itm not in FinalCover]
         if len(FinalCover)>0:
             print("Wrong: Elments left behind:", FinalCover)
-            return 999999999
+            return 999999999,999999999
         else:
             CostTime=(time_end-time_start)
-            print('Correct, time :',CostTime, ' s')
-            return CostTime
+            # print('Correct, time :',CostTime, ' s')
+            return CostTime,len(IndepentSets)
 
 
 def RandomGenerateData(n):
@@ -195,51 +195,90 @@ def GreedySolver(Subsets, TargetSet, use_real=0):
                 S[:,i] = 0
     time_end=time.time()
     CostTime=(time_end-time_start)
-    print(states_order)
-    return CostTime
+    # print(states_order)
+    return CostTime,len(states_order )
 
 
-def AverageRunningTimeTest():
+
+
+def AverageRunningTest():
     record1={}
     record2={}
     AvgRunTimes=200
     for comple in range(10,29):
         avgTime1=0.0
         avgTime2=0.0
+        avgSE1=0.0
+        avgSE2=0.0
+        avgAccuracy=0.0
         print("Testing size=",comple)
         for _ in range(0,AvgRunTimes):
             S,C=RandomGenerateData(comple)
-            avgTime1+=DpSolver(S,C)
-            avgTime2+=GreedySolver(S,C)
+            RuningTimeDp, RightNumber=DpSolver(S,C)
+            RuningTimeGreedy, ApproximateNumber=GreedySolver(S,C)
+            avgTime1+=RuningTimeDp
+            avgTime2+=RuningTimeGreedy
+            Accuracy= RightNumber/ApproximateNumber
+            InverseAccuracy= ApproximateNumber/RightNumber
+            avgSE1+= (comple**2)  /  (RuningTimeDp+0.00000001 )  
+            avgSE2+= (comple**2) /(  (RuningTimeGreedy+0.00000001)  *InverseAccuracy  )
+            avgAccuracy+=Accuracy
+
         avgTime1/=AvgRunTimes
         avgTime2/=AvgRunTimes
-        record1[str(comple)]=avgTime1
-        record2[str(comple)]=avgTime2
-    print("record1=",record1)
+        avgSE1/=AvgRunTimes
+        avgSE2/=AvgRunTimes
+        avgAccuracy/=AvgRunTimes
+        record1[str(comple)]=(avgTime1, avgSE1  )
+        record2[str(comple)]=(avgTime2,  avgSE2,avgAccuracy )
+    print("record1=",record1) 
     print("record2=",record2)
-# record= {   
-# '10': 0.00036903142929077147, 
-# '11': 0.000483701229095459, 
-# '12': 0.001161123514175415, 
-# '13': 0.0011628305912017823, 
-# '14': 0.0023096323013305662, 
-# '15': 0.004047138690948486, 
-# '16': 0.009481863975524902, 
-# '17': 0.016377025842666627, 
-# '18': 0.015543426275253297, 
-# '19': 0.03680110692977905, 
-# '20': 0.08568682312965394, 
-# '21': 0.1425240957736969, 
-# '22': 0.24144449710845947, 
-# '23': 0.2642457389831543, 
-# '24': 0.5444713473320008, 
-# '25': 2.539850001335144, 
-# '26': 2.6736352896690367, 
-# '27': 3.9067941653728484, 
-# '28': 9.939897587299347}
+
+
+# record1= {'10': (0.0003242814540863037, 7450023399.126878), 
+# '11': (0.0005717360973358154, 7744037279.259804),
+# '12': (0.0007928860187530518, 8784045783.00335), 
+# '13': (0.0010219323635101319, 8450065582.662675),
+# '14': (0.0022614741325378417, 7840076414.879299),
+# '15': (0.004429367780685425, 5962585516.532829),
+# '16': (0.009631952047348022, 6016079878.676352),
+# '17': (0.014117741584777832, 3757107207.991474), 
+# '18': (0.016532138586044312, 2916109196.6533875), 
+# '19': (0.030278210639953614, 3068613798.301462), 
+# '20': (0.10232037901878357, 2000084372.3522112), 
+# '21': (0.1247658932209015, 1323068887.2965524), 
+# '22': (0.25415498614311216, 1210059551.4195554), 
+# '23': (0.2914220988750458, 264550705.09451005), 
+# '24': (0.3958284175395966, 288052169.38737494), 
+# '25': (1.4171453988552094, 312519523.0680994), 
+# '26': (2.476246106624603, 27339.094657406124), 
+# '27': (4.403908573389053, 16283.637658536323), 
+# '28': (9.713156042098999, 9959.45755737888)}
+# record2= {'10': (0.00017451882362365723, 7943588415.665187, 0.963761904761905), 
+# '11': (0.00015131235122680664, 9843993068.61374, 0.9627777777777783), 
+# '12': (0.00017440319061279297, 11509110469.133291, 0.9705515873015872), 
+# '13': (0.00019459724426269532, 13228239022.60723, 0.9733194444444446), 
+# '14': (0.00020470619201660157, 15004694511.905525, 0.963988095238095), 
+# '15': (0.00024850130081176757, 16136036189.242273, 0.955886904761905), 
+# '16': (0.0001944255828857422,  19819726026.414364, 0.9615613275613275), 
+# '17': (0.0002492415904998779,  20875503076.99559, 0.9629204545454542), 
+# '18': (0.00019458293914794922, 25051234194.79037, 0.9624936868686871), 
+# '19': (0.00019414663314819335, 27899577697.731613, 0.956122474747475), 
+# '20': (0.00022948384284973144, 29416566626.928177, 0.9537983405483405), 
+# '21': (0.00022933721542358398, 32128714565.502777, 0.9446651126651127), 
+# '22': (0.00021181464195251464, 36097639010.407234, 0.9481893939393938), 
+# '23': (0.00022439837455749513, 39194256138.114784, 0.9555590520590523), 
+# '24': (0.00031428217887878416, 37271075169.610985, 0.9444188034188032), 
+# '25': (0.000273897647857666,   42394417710.81345,  0.9374911616161614), 
+# '26': (0.0003091251850128174,  43508992746.434456,  0.9368545066045069), 
+# '27': (0.0003023505210876465,  47702023100.4177,    0.9402469474969477), 
+# '28': (0.0003293895721435547,  49149315848.76754, 0.9314894827394825)}
+
+
+
 #TODO:
 #1.debug greedy for warehouse_1.0.xlsx  --xiaodong done!
-#2.accuracy --xingdi 
+#2.accuracy --xingdi  
 #3.visualization 
 
 def main():
@@ -247,11 +286,11 @@ def main():
     docstring
     """
     
-    S, C=loaExcelFile("warehouse_1.0.xlsx")
-    DpSolver(S, C)
-    use_real = 1 #if use real data: use_real=1, else: use_real=0
-    GreedySolver(S, C, use_real)
-    AverageRunningTimeTest()
+    # S, C=loaExcelFile("warehouse_1.0.xlsx")
+    # DpSolver(S, C)
+    # use_real = 1 #if use real data: use_real=1, else: use_real=0
+    # GreedySolver(S, C, use_real)
+    AverageRunningTest()
 
 
 
