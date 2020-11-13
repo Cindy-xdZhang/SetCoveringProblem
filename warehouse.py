@@ -152,15 +152,25 @@ def RandomGenerateData(n):
             Subsets[ID2]=Subsets[ID2]+ [item]
     return Subsets,TestC
 
-def GreedySolver(Subsets, TargetSet): 
+def GreedySolver(Subsets, TargetSet, use_real=0): 
     time_start=time.time()
     #modify subsets
-    n = len(TargetSet)
-    S = np.zeros((n,n))
-    for key in Subsets.keys():
-    	for item in Subsets[key]:
-    		S[int(key), int(item)] = 1.0
-
+    if use_real == 0:
+        n = len(TargetSet)
+        S = np.zeros((n,n))
+        for key in Subsets.keys():
+    	    for item in Subsets[key]:
+    		    S[int(key), int(item)] = 1.0
+    elif use_real == 1:
+        states2id = {}
+        for k, item in enumerate(TargetSet):
+            states2id[item] = k
+        n = len(TargetSet)
+        S = np.zeros((n,n))
+        for key in Subsets.keys():
+            for item in Subsets[key]:
+                S[states2id[key], states2id[item]] = 1.0
+                
     #algorithm
     states = TargetSet
     states_order = []
@@ -228,7 +238,7 @@ def AverageRunningTimeTest():
 # '27': 3.9067941653728484, 
 # '28': 9.939897587299347}
 #TODO:
-#1.debug greedy for warehouse_1.0.xlsx  --xiaodong 
+#1.debug greedy for warehouse_1.0.xlsx  --xiaodong done!
 #2.accuracy --xingdi 
 #3.visualization 
 
@@ -239,7 +249,8 @@ def main():
     
     S, C=loaExcelFile("warehouse_1.0.xlsx")
     DpSolver(S, C)
-    GreedySolver(S, C)
+    use_real = 1 #if use real data: use_real=1, else: use_real=0
+    GreedySolver(S, C, use_real)
     AverageRunningTimeTest()
 
 
