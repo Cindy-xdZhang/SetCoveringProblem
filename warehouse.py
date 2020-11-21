@@ -33,6 +33,48 @@ def loaExcelFile(path):
     # print(dict1)
     # print(id2statename)
     return dict1,id2statename
+
+def RandomGenerateData(n):
+    m=n
+    TestC=[t for t in range(n)]  
+    ValidCover=[]
+    Subsets={}
+    for tm in range(m):
+        ID1=random.randint(1,int(n/5))
+        Subset = list(np.random.choice(range(0, n), size=ID1, replace=False))
+        Subsets[str(tm)]=Subset
+        ValidCover.extend(Subset)
+    Left=[it for it in TestC if it not in ValidCover]
+    if len(Left)>=1:
+        ID = list(np.random.choice(range(0, m), size=len(Left)*2, replace=False))
+        for i, item in enumerate(Left):
+            ID1 = str(ID[i*2])
+            ID2 = str(ID[i*2+1])
+            Subsets[ID1]=Subsets[ID1]+ [item]
+            Subsets[ID2]=Subsets[ID2]+ [item]
+    return Subsets,TestC
+def RandomGenerateData2(n,m):
+    TestC=[t for t in range(n)]  
+    ValidCover=[]
+    Subsets={}
+    for tm in range(m):
+        ID1=random.randint(1,int(n/5))
+        Subset = list(np.random.choice(range(0, n), size=ID1, replace=False))
+        Subsets[str(tm)]=Subset
+        ValidCover.extend(Subset)
+    Left=[it for it in TestC if it not in ValidCover]
+    if len(Left)>=1:
+        ID = list(np.random.choice(range(0, m), size=len(Left)*2, replace=True))
+        for i, item in enumerate(Left):
+            ID1 = str(ID[i*2])
+            ID2 = str(ID[i*2+1])
+            Subsets[ID1]=Subsets[ID1]+ [item]
+            Subsets[ID2]=Subsets[ID2]+ [item]
+    return Subsets,TestC
+
+
+DV_RESTORE={}  
+RuningSelect=[]
 def State2Key(InputList,TargetSet):
     stringkey=""
     for item in TargetSet:
@@ -41,9 +83,6 @@ def State2Key(InputList,TargetSet):
         else:
             stringkey+="0"
     return stringkey
-DV_RESTORE={}  
-RuningSelect=[]
-
 def Dpeqution(RuningLeft,Subsets,TargetSet):
     KEY=State2Key(RuningLeft,TargetSet) 
     if(KEY  in DV_RESTORE.keys()):
@@ -70,10 +109,7 @@ def Dpeqution(RuningLeft,Subsets,TargetSet):
         else:
             cost=0
         DV_RESTORE[KEY]=[cost, bestOption]
-        return cost
-    
-
-
+        return cost  
 def DpSolver( Subsets, TargetSet):
     time_start=time.time()
     #prepocess1 :find indepent subsets
@@ -132,26 +168,6 @@ def DpSolver( Subsets, TargetSet):
             return CostTime,len(IndepentSets)
 
 
-def RandomGenerateData(n):
-    m=n
-    TestC=[t for t in range(n)]  
-    ValidCover=[]
-    Subsets={}
-    for tm in range(m):
-        ID1=random.randint(1,int(n/5))
-        Subset = list(np.random.choice(range(0, n), size=ID1, replace=False))
-        Subsets[str(tm)]=Subset
-        ValidCover.extend(Subset)
-    Left=[it for it in TestC if it not in ValidCover]
-    if len(Left)>=1:
-        ID = list(np.random.choice(range(0, m), size=len(Left)*2, replace=False))
-        for i, item in enumerate(Left):
-            ID1 = str(ID[i*2])
-            ID2 = str(ID[i*2+1])
-            Subsets[ID1]=Subsets[ID1]+ [item]
-            Subsets[ID2]=Subsets[ID2]+ [item]
-    return Subsets,TestC
-
 def GreedySolver(Subsets, TargetSet, use_real=0): 
     time_start=time.time()
     #modify subsets
@@ -198,9 +214,6 @@ def GreedySolver(Subsets, TargetSet, use_real=0):
     # print(states_order)
     return CostTime,len(states_order )
 
-
-
-
 def AverageRunningTest():
     record1={}
     record2={}
@@ -208,9 +221,7 @@ def AverageRunningTest():
     for comple in range(10,29):
         avgTime1=0.0
         avgTime2=0.0
-        avgSE1=0.0
-        avgSE2=0.0
-        avgAccuracy=0.0
+        avgRatio=0.0
         print("Testing size=",comple)
         for _ in range(0,AvgRunTimes):
             S,C=RandomGenerateData(comple)
@@ -218,67 +229,110 @@ def AverageRunningTest():
             RuningTimeGreedy, ApproximateNumber=GreedySolver(S,C)
             avgTime1+=RuningTimeDp
             avgTime2+=RuningTimeGreedy
-            Accuracy= RightNumber/ApproximateNumber
-            InverseAccuracy= ApproximateNumber/RightNumber
-            avgSE1+= (comple**2)  /  (RuningTimeDp+0.00000001 )  
-            avgSE2+= (comple**2) /(  (RuningTimeGreedy+0.00000001)  *InverseAccuracy  )
-            avgAccuracy+=Accuracy
+            ratio= ApproximateNumber/RightNumber
+            avgRatio+=ratio
 
         avgTime1/=AvgRunTimes
         avgTime2/=AvgRunTimes
-        avgSE1/=AvgRunTimes
-        avgSE2/=AvgRunTimes
-        avgAccuracy/=AvgRunTimes
-        record1[str(comple)]=(avgTime1, avgSE1  )
-        record2[str(comple)]=(avgTime2,  avgSE2,avgAccuracy )
+        avgRatio/=AvgRunTimes
+        record1[str(comple)]=(avgTime1)
+        record2[str(comple)]=(avgTime2,avgRatio )
     print("record1=",record1) 
     print("record2=",record2)
+# record1_DP_time= {'10': 0.0002798652648925781,
+# '11': 0.0005084526538848877,
+# '12': 0.0007184052467346191,
+# '13': 0.0015070712566375732,
+# '14': 0.002278109788894653, 
+# '15': 0.004432696104049683, 
+# '16': 0.006098926067352295, 
+# '17': 0.012974853515625, 
+# '18': 0.01497972846031189, 
+# '19': 0.022857216596603395, 
+# '20': 0.10202179431915283, 
+# '21': 0.10491244077682495, 
+# '22': 0.1674989914894104, 
+# '23': 0.2043727970123291, 
+# '24': 0.49154454708099365, 
+# '25': 1.420781329870224, 
+# '26': 2.559551054239273, 
+# '27': 3.473370096683502, 
+# '28': 7.276949617862702}
+# record2_Greedy_time_approximate_ratio= {
+# '10': (0.00011432766914367675, 1.032083333333333), 
+# '11': (0.0001546013355255127, 1.0396428571428566), 
+# '12': (0.00012909293174743653, 1.0315416666666664), 
+# '13': (0.00018952369689941405, 1.0486349206349201), 
+# '14': (0.00017937302589416505, 1.0489940476190474), 
+# '15': (0.00017474174499511718, 1.0467996031746027), 
+# '16': (0.00018971562385559083, 1.0425892857142853), 
+# '17': (0.00022937774658203126, 1.0441112914862911), 
+# '18': (0.0002445995807647705, 1.0444960317460317), 
+# '19': (0.00018434762954711915, 1.0395265151515154), 
+# '20': (0.0002161562442779541, 1.053222222222222), 
+# '21': (0.00020480751991271972, 1.0531805555555558), 
+# '22': (0.00029929876327514646, 1.0559689754689758), 
+# '23': (0.0002839088439941406, 1.0599154595404594), 
+# '24': (0.0002734363079071045, 1.0668695887445887), 
+# '25': (0.00027927279472351075, 1.0728097041847042), 
+# '26': (0.0002846193313598633, 1.076166666666667), 
+# '27': (0.0003023242950439453, 1.0754392135642141), 
+# '28': (0.00036504626274108887, 1.0789856254856263)}
+
+def N_Mtest():
+    record1={}
+    record2={}
+    AvgRunTimes=200
+    for N in range(10,29,2):
+        for m in range(int(N/2), int(N*1)):
+            print("N size=",N, "M size=", m)
+            avgTime1=0.0
+            avgTime2=0.0
+            avgRatio=0.0
+            for _ in range(0,AvgRunTimes):
+                S,C=RandomGenerateData2(N,m)
+                RuningTimeDp, RightNumber=DpSolver(S,C)
+                # RuningTimeGreedy, ApproximateNumber=GreedySolver(S,C)
+                RuningTimeGreedy, ApproximateNumber=0,0
+                avgTime1+=RuningTimeDp
+                avgTime2+=RuningTimeGreedy
+                ratio= ApproximateNumber/RightNumber
+                avgRatio+=ratio
+            avgTime1/=AvgRunTimes
+            avgTime2/=AvgRunTimes
+            avgRatio/=AvgRunTimes
+            key1=str(N)+"-"+str(m)
+            record1[key1]=(avgTime1)
+            record2[key1]=(avgTime2,avgRatio )
+    print("record_DP=",record1) 
+    print("record_Greedy=",record2)
+
+#N-M test:
+# record_DP= {
+# '10-5': 4.004359245300293e-05, '10-6': 7.961392402648926e-05, '10-7': 6.000638008117676e-05, '10-8': 0.00012984514236450196, '10-9': 0.00017947793006896972, 
+# '12-6': 2.4974346160888672e-05, '12-7': 6.479501724243164e-05, '12-8': 8.99505615234375e-05, '12-9': 0.00015962719917297363, '12-10': 0.00021934032440185547, '12-11': 0.00035407423973083497, 
+# '14-7': 5.51152229309082e-05, '14-8': 5.4824352264404294e-05, '14-9': 0.00013856172561645507, '14-10': 0.00015457510948181153, '14-11': 0.0003290557861328125, '14-12': 0.0005834376811981201, '14-13': 0.000862584114074707, 
+# '16-8': 7.482528686523437e-05, '16-9': 0.00012954354286193848, '16-10': 0.0001791083812713623, '16-11': 0.00037958621978759763, '16-12': 0.0007679486274719239, '16-13': 0.001132364273071289, '16-14': 0.001612182855606079, '16-15': 0.004403108358383178, 
+# '18-9': 0.0001245427131652832, '18-10': 0.00015946507453918458, '18-11': 0.00025362730026245116, '18-12': 0.0005734515190124512, '18-13': 0.0012667119503021241, '18-14': 0.002493147850036621, '18-15': 0.0034657251834869385, '18-16': 0.004792236089706421, '18-17': 0.007115749120712281, 
+# '20-10': 0.0002444052696228027, '20-11': 0.0003887450695037842, '20-12': 0.0007232964038848877, '20-13': 0.0008723866939544677, '20-14': 0.0017399859428405761, '20-15': 0.004836635589599609, '20-16': 0.008786441087722778, '20-17': 0.011097847223281861, '20-18': 0.031089686155319214, '20-19': 0.036355568170547484, 
+# '22-11': 0.00033378481864929197, '22-12': 0.00032379746437072754, '22-13': 0.001070934534072876, '22-14': 0.0013019835948944092, '22-15': 0.00236850380897522, '22-16': 0.004494000673294068, '22-17': 0.010028715133666993, '22-18': 0.016087411642074584, '22-19': 0.03583617329597473, '22-20': 0.07778719663619996, '22-21': 0.13958309173583985, 
+# '24-12': 0.00033511757850646974, '24-13': 0.0005372810363769531, '24-14': 0.0013167178630828858, '24-15': 0.001271597146987915, '24-16': 0.0029817521572113037, '24-17': 0.007295528650283814, '24-18': 0.00876156210899353, '24-19': 0.027804120779037475, '24-20': 0.05697077035903931, '24-21': 0.056932560205459594, '24-22': 0.1355559241771698, '24-23': 0.21280259013175964, 
+# '26-13': 0.000609968900680542, '26-14': 0.001301274299621582, '26-15': 0.002363206148147583, '26-16': 0.006038761138916016, '26-17': 0.010117342472076416, '26-18': 0.02429749011993408, '26-19': 0.041402496099472046, '26-20': 0.12608700394630432, '26-21': 0.13267290472984314, '26-22': 0.26220317244529723, 
+# '26-23': 0.5492830598354339, '26-24': 1.1552123892307282, '26-25': 1.127032607793808, 
+# '28-14': 0.0009023392200469971, '28-15': 0.0021247148513793947, '28-16': 0.004822062253952026, '28-17': 0.006717536449432373, '28-18': 0.014701269865036011, 
+# '28-19': 0.03995298624038696, '28-20': 0.056896317005157473, '28-21': 0.0665033221244812, '28-22': 0.15205081343650817, '28-23': 0.2973851120471954, 
+# '28-24': 0.6095074570178985, '28-25': 
+# 0.8849427211284637, '28-26': 2.7471520602703094, '28-27': 3.976942117214203}
 
 
-# record1= {'10': (0.0003242814540863037, 7450023399.126878), 
-# '11': (0.0005717360973358154, 7744037279.259804),
-# '12': (0.0007928860187530518, 8784045783.00335), 
-# '13': (0.0010219323635101319, 8450065582.662675),
-# '14': (0.0022614741325378417, 7840076414.879299),
-# '15': (0.004429367780685425, 5962585516.532829),
-# '16': (0.009631952047348022, 6016079878.676352),
-# '17': (0.014117741584777832, 3757107207.991474), 
-# '18': (0.016532138586044312, 2916109196.6533875), 
-# '19': (0.030278210639953614, 3068613798.301462), 
-# '20': (0.10232037901878357, 2000084372.3522112), 
-# '21': (0.1247658932209015, 1323068887.2965524), 
-# '22': (0.25415498614311216, 1210059551.4195554), 
-# '23': (0.2914220988750458, 264550705.09451005), 
-# '24': (0.3958284175395966, 288052169.38737494), 
-# '25': (1.4171453988552094, 312519523.0680994), 
-# '26': (2.476246106624603, 27339.094657406124), 
-# '27': (4.403908573389053, 16283.637658536323), 
-# '28': (9.713156042098999, 9959.45755737888)}
-# record2= {'10': (0.00017451882362365723, 7943588415.665187, 0.963761904761905), 
-# '11': (0.00015131235122680664, 9843993068.61374, 0.9627777777777783), 
-# '12': (0.00017440319061279297, 11509110469.133291, 0.9705515873015872), 
-# '13': (0.00019459724426269532, 13228239022.60723, 0.9733194444444446), 
-# '14': (0.00020470619201660157, 15004694511.905525, 0.963988095238095), 
-# '15': (0.00024850130081176757, 16136036189.242273, 0.955886904761905), 
-# '16': (0.0001944255828857422,  19819726026.414364, 0.9615613275613275), 
-# '17': (0.0002492415904998779,  20875503076.99559, 0.9629204545454542), 
-# '18': (0.00019458293914794922, 25051234194.79037, 0.9624936868686871), 
-# '19': (0.00019414663314819335, 27899577697.731613, 0.956122474747475), 
-# '20': (0.00022948384284973144, 29416566626.928177, 0.9537983405483405), 
-# '21': (0.00022933721542358398, 32128714565.502777, 0.9446651126651127), 
-# '22': (0.00021181464195251464, 36097639010.407234, 0.9481893939393938), 
-# '23': (0.00022439837455749513, 39194256138.114784, 0.9555590520590523), 
-# '24': (0.00031428217887878416, 37271075169.610985, 0.9444188034188032), 
-# '25': (0.000273897647857666,   42394417710.81345,  0.9374911616161614), 
-# '26': (0.0003091251850128174,  43508992746.434456,  0.9368545066045069), 
-# '27': (0.0003023505210876465,  47702023100.4177,    0.9402469474969477), 
-# '28': (0.0003293895721435547,  49149315848.76754, 0.9314894827394825)}
+
 
 
 
 #TODO:
 #1.debug greedy for warehouse_1.0.xlsx  --xiaodong done!
-#2.accuracy --xingdi  
+#2.accuracy --xingdi  done!
+#2.1: space consumption: Dp=2**n
 #3.visualization 
 
 def main():
@@ -290,7 +344,7 @@ def main():
     # DpSolver(S, C)
     # use_real = 1 #if use real data: use_real=1, else: use_real=0
     # GreedySolver(S, C, use_real)
-    AverageRunningTest()
+    N_Mtest()
 
 
 
